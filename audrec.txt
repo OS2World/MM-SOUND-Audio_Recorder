@@ -1,0 +1,49 @@
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿                       ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ Audio Recorder and Replayer for OS/2 ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´ AudRec02.zip ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ                       ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+ Provides an Audio Recorder and Replayer for testing UAC compliant adapters.
+
+ More information at: http://home.hccnet.nl/w.m.brul/recorder/index.html
+
+ Open Source product with its ISC license contained in the LICENSE file.
+ Source Code at http://home.hccnet.nl/w.m.brul/recorder/AudRec02s.zip
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿                                                   ÚÄÄÄÄÄÄÄÄ¿
+³ Audio Recorder ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´ record ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ                                                   ÀÄÄÄÄÄÄÄÄÙ
+
+ This test application records pcm audio into the test.wav file.
+ It may be interrupted by hitting the Ctrl+Break or Ctrl+C keys.
+
+ Using e.g. "record /a3 /b32 /c2 /f192000" acquires the Ampmix03 device
+ and records 32-bit, stereo, 192000 Hz pcm audio into the test.wav file.
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿                                                   ÚÄÄÄÄÄÄÄÄ¿
+³ Audio Replayer ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´ replay ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ                                                   ÀÄÄÄÄÄÄÄÄÙ
+
+ This test application replays pcm audio from the test.wav file.
+ It may be interrupted by hitting the Ctrl+Break or Ctrl+C keys.
+
+ Using e.g. "replay /a3 /b32 /c2 /f192000" acquires the Ampmix03 device
+ and replays 32-bit, stereo, 192000 Hz pcm audio from the test.wav file.
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ Program Parameters ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+ /aN - Select audio adapter. Proper values for N are 0 up to 8.
+ Choose the appropriate adapter. Defaults to 3 i.e. Ampmix03.
+
+ /bN - Select number of bits. Proper values for N are 8, 16, 24, 32.
+ Choose what your adapter supports. Defaults to 32.
+
+ /cN - Select number of channels. Proper values for N are 1=mono, 2=stereo.
+ Choose what your adapter supports. Defaults to 2.
+
+ /fN - Select sample frequency.
+ Proper values for N are 44100,48000,88200,96000,176400,192000,352800,384000.
+ Alternative values for N are 8000,11025,12000,16000,22050,24000,32000,64000.
+ Choose what your adapter supports. Defaults to 192000.
+

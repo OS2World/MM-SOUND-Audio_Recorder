@@ -1,0 +1,24 @@
+-------------------------------------------------------------------------------
+replay.exe - Audio Replayer for OS/2
+-------------------------------------------------------------------------------
+
+This test application replays pcm audio from the test.wav file.
+It may be interrupted by hitting the Ctrl+Break or Ctrl+C keys.
+
+Invokation could be done as follows:
+
+replay /a1 /b16 /c1 /f44100
+
+/a1 sets the adapter to Ampmix01.
+/b16 sets the number of bits to 16.
+/c1 sets the number of channels to 1.
+/f44100 sets the frequency to 44100.
+
+All arguments are optional and case sensitive.
+An invalid character truncates the argument value.
+The sequence of the arguments is not important.
+
+Defaults are shown below:
+
+replay /a3 /b32 /c2 /f192000
+

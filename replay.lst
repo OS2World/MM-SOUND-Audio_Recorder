@@ -1,0 +1,875 @@
+Turbo Assembler	 Version 4.1	    06-08-19 16:55:40	    Page 1
+replay.asm
+
+
+
+      1					 .486p
+      2	00000000			 model flat
+      3					 ideal
+      4
+      5		  =0003			 Adapter = 3 ; 1,2,3
+      6
+      7		  =0020			 BitsPerSample = 32; 8,16,24,32
+      8		  =0002			 Channels = 2 ;	1=mono,2=stereo
+      9		  =0001			 FormatTag = 1 ; 1=PCM,301h=DSD
+     10		  =0002EE00		 SamplesPerSec = 192000; 44100,48000,88200,96000,176400,192000,352800,384000 Hz
+     11
+     12					 extrn DosClose:near
+     13					 extrn DosCloseEventSem:near
+     14					 extrn DosCreateEventSem:near
+     15					 extrn DosExit:near
+     16					 extrn DosExitList:near
+     17					 extrn DosOpen:near
+     18					 extrn DosPostEventSem:near
+     19					 extrn DosRead:near
+     20					 extrn DosResetEventSem:near
+     21					 extrn DosSleep:near
+     22					 extrn DosWaitEventSem:near
+     23					 extrn DosWrite:near
+     24
+     25					 extrn MciGetErrorString:near
+     26					 extrn MciSendCommand:near
+     27
+     28	00000000			 stack 8192
+     29
+     30	00002000			 dataseg
+     31	00000000  74 65	73 74 2E 77 61+	 szInput db 'test.wav',0
+     32		  76 00
+     33
+     34		  =0000			 BufferSize = 0
+     35		  =0008			 NumBuffers = 8
+     36
+     37	00000009			 dataseg
+     38	00000009  41 6D	70 6D 69 78 30+	 AmpMixer db 'Ampmix0','0'+Adapter,0
+     39		  33 00
+     40	00000012  00000000 00000000   +	 AmpOpenParms dd 0,0,offset(AmpMixer),0,0,0
+     41		  00000009r 00000000  +
+     42		  00000000 00000000
+     43	0000002A  00000000 00000020   +	 MixerAllocParms dd 0,32,NumBuffers,BufferSize,0,0,0,offset(MixerBuffer1)
+     44		  00000008 00000000   +
+     45		  00000000 00000000   +
+     46		  00000000 00000086r
+     47	0000004A  00000000 00000020   +	 MixerSetupParms dd 0,BitsPerSample,FormatTag,SamplesPerSec,Channels,4,7,0,0,0,offset	    +
+     48		  00000001 0002EE00   +	 (SoundMixerEvent),0,BufferSize,NumBuffers
+     49		  00000002 00000004   +
+     50		  00000007 00000000   +
+     51		  00000000 00000000   +
+     52		  00000392r 00000000  +
+     53		  00000000 00000008
+     54
+     55	00000082			 dataseg
+     56	00000082  00000008		 FreeBuffers dd	NumBuffers
+     57	00000086  00000000 00000000   +	 MixerBuffer1 dd 0,0,0,0,offset(MixerBuffer2),0,0,0
+Turbo Assembler	 Version 4.1	    06-08-19 16:55:40	    Page 2
+replay.asm
+
+
+
+     58		  00000000 00000000   +
+     59		  000000A6r 00000000  +
+     60		  00000000 00000000
+     61	000000A6  00000000 00000000   +	 MixerBuffer2 dd 0,0,0,0,offset(MixerBuffer3),0,0,0
+     62		  00000000 00000000   +
+     63		  000000C6r 00000000  +
+     64		  00000000 00000000
+     65	000000C6  00000000 00000000   +	 MixerBuffer3 dd 0,0,0,0,offset(MixerBuffer4),0,0,0
+     66		  00000000 00000000   +
+     67		  000000E6r 00000000  +
+     68		  00000000 00000000
+     69	000000E6  00000000 00000000   +	 MixerBuffer4 dd 0,0,0,0,offset(MixerBuffer5),0,0,0
+     70		  00000000 00000000   +
+     71		  00000106r 00000000  +
+     72		  00000000 00000000
+     73	00000106  00000000 00000000   +	 MixerBuffer5 dd 0,0,0,0,offset(MixerBuffer6),0,0,0
+     74		  00000000 00000000   +
+     75		  00000126r 00000000  +
+     76		  00000000 00000000
+     77	00000126  00000000 00000000   +	 MixerBuffer6 dd 0,0,0,0,offset(MixerBuffer7),0,0,0
+     78		  00000000 00000000   +
+     79		  00000146r 00000000  +
+     80		  00000000 00000000
+     81	00000146  00000000 00000000   +	 MixerBuffer7 dd 0,0,0,0,offset(MixerBuffer8),0,0,0
+     82		  00000000 00000000   +
+     83		  00000166r 00000000  +
+     84		  00000000 00000000
+     85	00000166  00000000 00000000   +	 MixerBuffer8 dd 0,0,0,0,offset(MixerBuffer1),0,0,0
+     86		  00000000 00000000   +
+     87		  00000086r 00000000  +
+     88		  00000000 00000000
+     89	00000186  00000086r		 MixerBuffer dd	offset(MixerBuffer1)
+     90
+     91	0000018A			 udataseg
+     92	00000000  ????????		 DartSem dd ?
+     93	00000004  ????????		 FreeCnt dd ?
+     94	00000008  80*(??)		 MciMessage db 128 dup(?)
+     95	00000088  ????????		 Written dd ?
+     96
+     97	0000008C			 dataseg
+     98	0000018A  73 74	61 72 74 65 64+	 sGood0	db 'started.',13,10
+     99		  2E 0D	0A
+    100	00000194  73 74	6F 70 70 65 64+	 sGood1	db 'stopped.',13,10
+    101		  2E 0D	0A
+    102	0000019E  77 61	69 74 69 6E 67+	 sGood2	db 'waiting...',13,10
+    103		  2E 2E	2E 0D 0A
+    104	000001AA			 label sGood3 byte
+    105
+    106	000001AA			 dataseg
+    107	000001AA  20 6F	70 65 6E 69 6E+	 sInfo0	db ' opening ampmixer device',13,10
+    108		  67 20	61 6D 70 6D 69+
+    109		  78 65	72 20 64 65 76+
+    110		  69 63	65 0D 0A
+    111	000001C4  20 69	6E 66 6F 72 6D+	 sInfo1	db ' informing dart being used',13,10
+    112		  69 6E	67 20 64 61 72+
+    113		  74 20	62 65 69 6E 67+
+    114		  20 75	73 65 64 0D 0A
+Turbo Assembler	 Version 4.1	    06-08-19 16:55:40	    Page 3
+replay.asm
+
+
+
+    115	000001E0  20 61	6C 6C 6F 63 61+	 sInfo2	db ' allocating	dart buffers',13,10
+    116		  74 69	6E 67 20 64 61+
+    117		  72 74	20 62 75 66 66+
+    118		  65 72	73 0D 0A
+    119	000001FA  20 63	72 65 61 74 69+	 sInfo3	db ' creating event semaphore',13,10
+    120		  6E 67	20 65 76 65 6E+
+    121		  74 20	73 65 6D 61 70+
+    122		  68 6F	72 65 0D 0A
+    123	00000215  20 63	6C 6F 73 69 6E+	 sInfo4	db ' closing event semaphore',13,10
+    124		  67 20	65 76 65 6E 74+
+    125		  20 73	65 6D 61 70 68+
+    126		  6F 72	65 0D 0A
+    127	0000022F  20 64	65 61 6C 6C 6F+	 sInfo5	db ' deallocating dart buffers',13,10
+    128		  63 61	74 69 6E 67 20+
+    129		  64 61	72 74 20 62 75+
+    130		  66 66	65 72 73 0D 0A
+    131	0000024B  20 69	6E 66 6F 72 6D+	 sInfo6	db ' informing dart use	ended',13,10
+    132		  69 6E	67 20 64 61 72+
+    133		  74 20	75 73 65 20 65+
+    134		  6E 64	65 64 0D 0A
+    135	00000266  20 63	6C 6F 73 69 6E+	 sInfo7	db ' closing ampmixer device',13,10
+    136		  67 20	61 6D 70 6D 69+
+    137		  78 65	72 20 64 65 76+
+    138		  69 63	65 0D 0A
+    139	00000280			 label sInfo8 byte
+    140
+    141	00000280			 dataseg
+    142	00000280  20 6F	70 65 6E 69 6E+	 sTest0	db ' opening audio input file',13,10
+    143		  67 20	61 75 64 69 6F+
+    144		  20 69	6E 70 75 74 20+
+    145		  66 69	6C 65 0D 0A
+    146	0000029B  20 72	65 61 64 69 6E+	 sTest1	db ' reading audio input file',13,10
+    147		  67 20	61 75 64 69 6F+
+    148		  20 69	6E 70 75 74 20+
+    149		  66 69	6C 65 0D 0A
+    150	000002B6  20 63	6C 6F 73 69 6E+	 sTest2	db ' closing audio input file',13,10
+    151		  67 20	61 75 64 69 6F+
+    152		  20 69	6E 70 75 74 20+
+    153		  66 69	6C 65 0D 0A
+    154	000002D1			 label sTest3 byte
+    155
+    156	000002D1			 udataseg
+    157	0000008C  2C*(??)		 AudioHeader db	44 dup(?)
+    158
+    159	000000B8			 udataseg
+    160	000000B8  ????????		 ActionTaken dd	?
+    161	000000BC  ????????		 BytesDone dd ?
+    162	000000C0  ????????		 BytesRead dd ?
+    163	000000C4  ????????		 fhDevice dd ?
+    164	000000C8  ????????		 fhInput dd ?
+    165
+    166	000000CC			 codeseg
+    167	00000000			 proc MainRoutine c near
+    168					 arg @@Mod,@@Nul,@@Env,@@Arg
+    169					 ; determine begin of arguments
+1   170	00000000  C8 0000 00			 ENTERD	 00000h,0
+1   171	00000004  FC			   cld ; operate foreward scan
+Turbo Assembler	 Version 4.1	    06-08-19 16:55:40	    Page 4
+replay.asm
+
+
+
+    172	00000005  B9 00000200		   mov ecx,512 ; max scan length
+    173	0000000A  8B 7D	14		   mov edi,[@@Arg] ; start address
+    174	0000000D  F2> AE		   repne scasb ; find terminator
+    175					 ; process passed arguments
+    176	0000000F  E8 000000B5		   call	ProcessArguments
+    177					 ; show	application started message
+    178					   call	DosWrite c,1,offset(sGood0),sGood1-sGood0,offset(BytesDone)
+1   179	00000014  68 000000BCr			 PUSH	 OFFSET(BYTESDONE)
+1   180	00000019  6A 0A				 PUSH	 SGOOD1-SGOOD0
+1   181	0000001B  68 0000018Ar			 PUSH	 OFFSET(SGOOD0)
+1   182	00000020  6A 01				 PUSH	 1
+1   183	00000022  E8 00000000e			 CALL	 DOSWRITE
+1   184	00000027  83 C4	10			 ADD	 ESP,00010h
+    185					 ; initialize sound device
+    186	0000002A  E8 00000278		   call	SoundDeviceInit
+    187					 ; open	pcm audio data input file
+    188					   call	DosWrite c,1,offset(sTest0),sTest1-sTest0,offset(BytesDone)
+1   189	0000002F  68 000000BCr			 PUSH	 OFFSET(BYTESDONE)
+1   190	00000034  6A 1B				 PUSH	 STEST1-STEST0
+1   191	00000036  68 00000280r			 PUSH	 OFFSET(STEST0)
+1   192	0000003B  6A 01				 PUSH	 1
+1   193	0000003D  E8 00000000e			 CALL	 DOSWRITE
+1   194	00000042  83 C4	10			 ADD	 ESP,00010h
+    195					   call	DosOpen	c,offset(szInput),offset(fhInput),offset(ActionTaken),0,0,1,01A0h,0
+1   196	00000045  6A 00				 PUSH	 0
+1   197	00000047  68 000001A0			 PUSH	 01A0H
+1   198	0000004C  6A 01				 PUSH	 1
+1   199	0000004E  6A 00				 PUSH	 0
+1   200	00000050  6A 00				 PUSH	 0
+1   201	00000052  68 000000B8r			 PUSH	 OFFSET(ACTIONTAKEN)
+1   202	00000057  68 000000C8r			 PUSH	 OFFSET(FHINPUT)
+1   203	0000005C  68 00000000r			 PUSH	 OFFSET(SZINPUT)
+1   204	00000061  E8 00000000e			 CALL	 DOSOPEN
+1   205	00000066  83 C4	20			 ADD	 ESP,00020h
+    206	00000069  E8 00000138		   call	ShowReturnCode
+    207	0000006E  75 18			   jnz NotReplaySound
+    208					 ; register termination	processing;
+    209					   call	DosExitList c,1,offset(ProcessComplete)
+1   210	00000070  68 00000127r			 PUSH	 OFFSET(PROCESSCOMPLETE)
+1   211	00000075  6A 01				 PUSH	 1
+1   212	00000077  E8 00000000e			 CALL	 DOSEXITLIST
+1   213	0000007C  83 C4	08			 ADD	 ESP,00008h
+    214					 ; invoke sound	processing
+    215	0000007F  E8 00000322		   call	SoundProcessing
+    216					 ; force process complete
+    217	00000084  2B C0			   sub eax,eax ; success
+1   218	00000086  C9				 LEAVED
+1   219	00000087  C3				 RET	 00000h
+    220	00000088			 label NotReplaySound near
+    221					 ; finalize sound device
+    222	00000088  E8 00000153		   call	SoundDeviceExit
+    223					 ; show	application stopped message
+    224					   call	DosWrite c,1,offset(sGood1),10,offset(BytesDone)
+1   225	0000008D  68 000000BCr			 PUSH	 OFFSET(BYTESDONE)
+1   226	00000092  6A 0A				 PUSH	 10
+1   227	00000094  68 00000194r			 PUSH	 OFFSET(SGOOD1)
+1   228	00000099  6A 01				 PUSH	 1
+Turbo Assembler	 Version 4.1	    06-08-19 16:55:40	    Page 5
+replay.asm
+
+
+
+1   229	0000009B  E8 00000000e			 CALL	 DOSWRITE
+1   230	000000A0  83 C4	10			 ADD	 ESP,00010h
+    231					 ; exit	the program
+    232					   call	DosExit	c,1,0
+1   233	000000A3  6A 00				 PUSH	 0
+1   234	000000A5  6A 01				 PUSH	 1
+1   235	000000A7  E8 00000000e			 CALL	 DOSEXIT
+1   236	000000AC  83 C4	08			 ADD	 ESP,00008h
+    237	000000AF			 endp MainRoutine
+    238
+    239	000000AF			 codeseg
+    240	000000AF			 proc dec2bin near
+    241					 ; decimal to binary
+    242	000000AF  2B C0			   sub eax,eax ; input
+    243	000000B1  2B D2			   sub edx,edx ; output
+    244	000000B3			 label ConvertInput near
+    245	000000B3  47			   inc edi ; next position
+    246	000000B4  8A 07			   mov al,[edi]	; digit
+    247					 ; convert decimal digit
+    248	000000B6  3C 30			   cmp al,'0' ;	minimum
+    249	000000B8  72 0E			   jb Enddec2bin ; done
+    250	000000BA  3C 39			   cmp al,'9' ;	maximum
+    251	000000BC  77 0A			   ja Enddec2bin ; done
+    252	000000BE  2C 30			   sub al,'0' ;	digit
+    253	000000C0  8D 14	92		   lea edx,[edx*4+edx]
+    254	000000C3  8D 14	50		   lea edx,[edx*2+eax]
+    255	000000C6  EB EB			   jmp ConvertInput
+    256	000000C8			 label Enddec2bin Near
+    257	000000C8  C3			   ret ; return
+    258	000000C9			 endp dec2bin
+    259
+    260	000000C9			 codeseg
+    261	000000C9			 proc ProcessArguments near
+    262					 ; scan	for forward slash
+    263	000000C9  8A 07			   mov al,[edi]	; character
+    264	000000CB  47			   inc edi ; next position
+    265	000000CC  3C 00			   cmp al,00h ;	terminator
+    266	000000CE  74 56			   je EndScanString ; done
+    267	000000D0  3C 2F			   cmp al,'/' ;	parameter
+    268	000000D2  75 F5			   jne ProcessArguments
+    269					 ; adapter number
+    270	000000D4  80 3F	61		   cmp [byte(edi)],'a'
+    271	000000D7  75 15			   jne NotAdapter
+    272	000000D9  E8 FFFFFFD1		   call	dec2bin	; convert
+    273					 ; verify adapter number
+    274	000000DE  83 FA	08		   cmp edx,8 ; maximum
+    275	000000E1  77 E6			   ja ProcessArguments
+    276					 ; update adapter number
+    277	000000E3  80 C2	30		   add dl,"0" ;	ascii
+    278	000000E6  88 15	00000010r	   mov [AmpMixer+7],dl
+    279	000000EC  EB DB			   jmp ProcessArguments
+    280	000000EE			 label NotAdapter near
+    281					 ; bits	per sample
+    282	000000EE  80 3F	62		   cmp [byte(edi)],'b'
+    283	000000F1  75 0D			   jne NotBits
+    284	000000F3  E8 FFFFFFB7		   call	dec2bin	; convert
+    285					 ; store BitsPerSample value
+Turbo Assembler	 Version 4.1	    06-08-19 16:55:40	    Page 6
+replay.asm
+
+
+
+    286	000000F8  89 15	0000004Er	   mov [MixerSetupParms+04],edx
+    287	000000FE  EB C9			   jmp ProcessArguments
+    288	00000100			 label NotBits near
+    289					 ; channels argument
+    290	00000100  80 3F	63		   cmp [byte(edi)],'c'
+    291	00000103  75 0D			   jne NotChannels
+    292	00000105  E8 FFFFFFA5		   call	dec2bin	; convert
+    293					 ; store Channels value
+    294	0000010A  89 15	0000005Ar	   mov [MixerSetupParms+16],edx
+    295	00000110  EB B7			   jmp ProcessArguments
+    296	00000112			 label NotChannels near
+    297					 ; frequency argument
+    298	00000112  80 3F	66		   cmp [byte(edi)],'f'
+    299	00000115  75 0D			   jne NotFrequency
+    300	00000117  E8 FFFFFF93		   call	dec2bin	; convert
+    301					 ; store SamplesPerSec value
+    302	0000011C  89 15	00000056r	   mov [MixerSetupParms+12],edx
+    303	00000122  EB A5			   jmp ProcessArguments
+    304	00000124			 label NotFrequency near
+    305	00000124  EB A3			   jmp ProcessArguments
+    306	00000126			 label EndScanString near
+    307					 ; skip	sanity checks
+    308	00000126  C3			   ret ; return
+    309	00000127			 endp ProcessArguments
+    310
+    311	00000127			 codeseg
+    312	00000127			 proc ProcessComplete c	near
+    313					 arg @@ReasonCode
+    314					 ; report reason code
+    315					 ; mov eax,[@@ReasonCode]
+    316					 ; call	ShowReturnCode
+    317	00000127			 label CloseAudioRecordFile near
+    318					 ; close pcm audio data	input file
+1   319	00000127  C8 0000 00			 ENTERD	 00000h,0
+1   320					   call	DosWrite c,1,offset(sTest2),sTest3-sTest2,offset(BytesDone)
+2   321	0000012B  68 000000BCr			 PUSH	 OFFSET(BYTESDONE)
+2   322	00000130  6A 1B				 PUSH	 STEST3-STEST2
+2   323	00000132  68 000002B6r			 PUSH	 OFFSET(STEST2)
+2   324	00000137  6A 01				 PUSH	 1
+2   325	00000139  E8 00000000e			 CALL	 DOSWRITE
+2   326	0000013E  83 C4	10			 ADD	 ESP,00010h
+    327					   call	DosClose c,[fhInput]
+1   328	00000141  FF 35	000000C8r		 PUSH	 [FHINPUT]
+1   329	00000147  E8 00000000e			 CALL	 DOSCLOSE
+1   330	0000014C  83 C4	04			 ADD	 ESP,00004h
+    331	0000014F  E8 00000052		   call	ShowReturnCode
+    332					 ; finalize sound device
+    333	00000154  E8 00000087		   call	SoundDeviceExit
+    334					 ; show	application stopped message
+    335					   call	DosWrite c,1,offset(sGood1),10,offset(BytesDone)
+1   336	00000159  68 000000BCr			 PUSH	 OFFSET(BYTESDONE)
+1   337	0000015E  6A 0A				 PUSH	 10
+1   338	00000160  68 00000194r			 PUSH	 OFFSET(SGOOD1)
+1   339	00000165  6A 01				 PUSH	 1
+1   340	00000167  E8 00000000e			 CALL	 DOSWRITE
+1   341	0000016C  83 C4	10			 ADD	 ESP,00010h
+    342					 ; exit	termination process
+Turbo Assembler	 Version 4.1	    06-08-19 16:55:40	    Page 7
+replay.asm
+
+
+
+    343					   call	DosExitList c,3,0)
+1   344	0000016F  6A 00				 PUSH	 0
+1   345	00000171  6A 03				 PUSH	 3
+1   346	00000173  E8 00000000e			 CALL	 DOSEXITLIST
+1   347	00000178  83 C4	08			 ADD	 ESP,00008h
+    348	0000017B			   endp	ProcessComplete
+    349
+    350	0000017B			 codeseg
+    351	0000017B			 proc ShowMultimediaMessage near
+    352	0000017B  85 C0			   test	eax,eax	; skip success
+    353	0000017D  74 26			   jz EndShowMultimediaMessage
+    354					   call	MciGetErrorString c,eax,offset(MciMessage),80
+1   355	0000017F  6A 50				 PUSH	 80
+1   356	00000181  68 00000008r			 PUSH	 OFFSET(MCIMESSAGE)
+1   357	00000186  50				 PUSH	 EAX
+1   358	00000187  E8 00000000e			 CALL	 MCIGETERRORSTRING
+1   359	0000018C  83 C4	0C			 ADD	 ESP,0000Ch
+    360					   call	DosWrite c,1,offset(MciMessage),80,offset(Written)
+1   361	0000018F  68 00000088r			 PUSH	 OFFSET(WRITTEN)
+1   362	00000194  6A 50				 PUSH	 80
+1   363	00000196  68 00000008r			 PUSH	 OFFSET(MCIMESSAGE)
+1   364	0000019B  6A 01				 PUSH	 1
+1   365	0000019D  E8 00000000e			 CALL	 DOSWRITE
+1   366	000001A2  83 C4	10			 ADD	 ESP,00010h
+    367	000001A5			 label EndShowMultimediaMessage	near
+    368	000001A5  C3			   ret ; return
+    369	000001A6			 endp ShowMultimediaMessage
+    370
+    371	000001A6			 dataseg
+    372	000002D1  30 31	32 33 34 35 36+	 hex2ascii db '0123456789ABCDEF'
+    373		  37 38	39 41 42 43 44+
+    374		  45 46
+    375	000002E1  5B 3F	3F 3F 3F 3F 3F+	 szStatus db '[????????]',13,10
+    376		  3F 3F	5D 0D 0A
+    377
+    378	000002ED			 codeseg
+    379	000001A6			 proc ShowReturnCode near
+    380					 ; skip	zero return code
+    381	000001A6  85 C0			   test	eax,eax	; zero
+    382	000001A8  74 35			   jz EndShowCode ; done
+    383	000001AA  50			   push	eax ; save register
+    384					 ; convert return code
+    385	000001AB  B9 00000008		   mov ecx,8 ; code length
+    386	000001B0			 label ConvertDigit near
+    387	000001B0  8B D0			   mov edx,eax ; error code
+    388	000001B2  83 E2	0F		   and edx,0000000Fh ; digit
+    389	000001B5  8A 92	000002D1r	   mov dl,[hex2ascii+edx]
+    390	000001BB  88 91	000002E1r	   mov [szStatus+ecx],dl
+    391	000001C1  C1 E8	04		   shr eax,4 ; next one
+    392	000001C4  E2 EA			   loop	ConvertDigit
+    393					 ; show	appropriate info message
+    394					   call	DosWrite c,1,offset(szStatus),12,offset(BytesDone)
+1   395	000001C6  68 000000BCr			 PUSH	 OFFSET(BYTESDONE)
+1   396	000001CB  6A 0C				 PUSH	 12
+1   397	000001CD  68 000002E1r			 PUSH	 OFFSET(SZSTATUS)
+1   398	000001D2  6A 01				 PUSH	 1
+1   399	000001D4  E8 00000000e			 CALL	 DOSWRITE
+Turbo Assembler	 Version 4.1	    06-08-19 16:55:40	    Page 8
+replay.asm
+
+
+
+1   400	000001D9  83 C4	10			 ADD	 ESP,00010h
+    401	000001DC  58			   pop eax ; restore register
+    402	000001DD  85 C0			   test	eax,eax	; check
+    403	000001DF			 label EndShowCode near
+    404	000001DF  C3			   ret ; return
+    405	000001E0			 endp ShowReturnCode
+    406
+    407	000001E0			 codeseg
+    408					 public	SoundDeviceExit
+    409	000001E0			 proc SoundDeviceExit near
+    410					 ; close dart event semaphore
+    411					   call	DosWrite c,1,offset(sInfo4),sInfo5-sInfo4,offset(BytesDone)
+1   412	000001E0  68 000000BCr			 PUSH	 OFFSET(BYTESDONE)
+1   413	000001E5  6A 1A				 PUSH	 SINFO5-SINFO4
+1   414	000001E7  68 00000215r			 PUSH	 OFFSET(SINFO4)
+1   415	000001EC  6A 01				 PUSH	 1
+1   416	000001EE  E8 00000000e			 CALL	 DOSWRITE
+1   417	000001F3  83 C4	10			 ADD	 ESP,00010h
+    418					   call	DosCloseEventSem c,[DartSem]
+1   419	000001F6  FF 35	00000000r		 PUSH	 [DARTSEM]
+1   420	000001FC  E8 00000000e			 CALL	 DOSCLOSEEVENTSEM
+1   421	00000201  83 C4	04			 ADD	 ESP,00004h
+    422					 ; deallocate dart communication buffers and wait
+    423					 ; 62=MCI_BUFFER,80002h=MCI_DEALLOCATE_MEMORY+MCI_WAIT
+    424					   call	DosWrite c,1,offset(sInfo5),sInfo6-sInfo5,offset(BytesDone)
+1   425	00000204  68 000000BCr			 PUSH	 OFFSET(BYTESDONE)
+1   426	00000209  6A 1C				 PUSH	 SINFO6-SINFO5
+1   427	0000020B  68 0000022Fr			 PUSH	 OFFSET(SINFO5)
+1   428	00000210  6A 01				 PUSH	 1
+1   429	00000212  E8 00000000e			 CALL	 DOSWRITE
+1   430	00000217  83 C4	10			 ADD	 ESP,00010h
+    431					   call	MciSendCommand c,[AmpOpenParms+04h],62,80002h,offset(MixerAllocParms),0
+1   432	0000021A  6A 00				 PUSH	 0
+1   433	0000021C  68 0000002Ar			 PUSH	 OFFSET(MIXERALLOCPARMS)
+1   434	00000221  68 00080002			 PUSH	 80002H
+1   435	00000226  6A 3E				 PUSH	 62
+1   436	00000228  FF 35	00000016r		 PUSH	 [AMPOPENPARMS+04H]
+1   437	0000022E  E8 00000000e			 CALL	 MCISENDCOMMAND
+1   438	00000233  83 C4	14			 ADD	 ESP,00014h
+    439	00000236  E8 FFFFFF40		   call	ShowMultimediaMessage
+    440					 ; inform ampmixer that	dart is	no longer used and wait
+    441					 ; 63=MCI_MIXSETUP,20002h=MCI_MIXSETUP_DEINIT+MCI_WAIT
+    442					   call	DosWrite c,1,offset(sInfo6),sInfo7-sInfo6,offset(BytesDone)
+1   443	0000023B  68 000000BCr			 PUSH	 OFFSET(BYTESDONE)
+1   444	00000240  6A 1B				 PUSH	 SINFO7-SINFO6
+1   445	00000242  68 0000024Br			 PUSH	 OFFSET(SINFO6)
+1   446	00000247  6A 01				 PUSH	 1
+1   447	00000249  E8 00000000e			 CALL	 DOSWRITE
+1   448	0000024E  83 C4	10			 ADD	 ESP,00010h
+    449					   call	MciSendCommand c,[AmpOpenParms+04h],63,20002h,offset(MixerSetupParms),0
+1   450	00000251  6A 00				 PUSH	 0
+1   451	00000253  68 0000004Ar			 PUSH	 OFFSET(MIXERSETUPPARMS)
+1   452	00000258  68 00020002			 PUSH	 20002H
+1   453	0000025D  6A 3F				 PUSH	 63
+1   454	0000025F  FF 35	00000016r		 PUSH	 [AMPOPENPARMS+04H]
+1   455	00000265  E8 00000000e			 CALL	 MCISENDCOMMAND
+1   456	0000026A  83 C4	14			 ADD	 ESP,00014h
+Turbo Assembler	 Version 4.1	    06-08-19 16:55:40	    Page 9
+replay.asm
+
+
+
+    457	0000026D  E8 FFFFFF09		   call	ShowMultimediaMessage
+    458					 ; close the waveaudio device and wait
+    459					 ; 02=MCI_CLOSE,00002h=MCI_WAIT
+    460					   call	DosWrite c,1,offset(sInfo7),sInfo8-sInfo7,offset(BytesDone)
+1   461	00000272  68 000000BCr			 PUSH	 OFFSET(BYTESDONE)
+1   462	00000277  6A 1A				 PUSH	 SINFO8-SINFO7
+1   463	00000279  68 00000266r			 PUSH	 OFFSET(SINFO7)
+1   464	0000027E  6A 01				 PUSH	 1
+1   465	00000280  E8 00000000e			 CALL	 DOSWRITE
+1   466	00000285  83 C4	10			 ADD	 ESP,00010h
+    467					   call	MciSendCommand c,[AmpOpenParms+04h],02,00002h,offset(AmpOpenParms),0
+1   468	00000288  6A 00				 PUSH	 0
+1   469	0000028A  68 00000012r			 PUSH	 OFFSET(AMPOPENPARMS)
+1   470	0000028F  6A 02				 PUSH	 00002H
+1   471	00000291  6A 02				 PUSH	 02
+1   472	00000293  FF 35	00000016r		 PUSH	 [AMPOPENPARMS+04H]
+1   473	00000299  E8 00000000e			 CALL	 MCISENDCOMMAND
+1   474	0000029E  83 C4	14			 ADD	 ESP,00014h
+    475	000002A1  E8 FFFFFED5		   call	ShowMultimediaMessage
+    476	000002A6  C3			   ret ; return
+    477	000002A7			 endp SoundDeviceExit
+    478
+    479	000002A7			 codeseg
+    480					 public	SoundDeviceInit
+    481	000002A7			 proc SoundDeviceInit near
+    482					 ; open	the ampmixer device shared and wait
+    483					 ; 01=MCI_OPEN,02002h=MCI_OPEN_TYPE_ID+MCI_WAIT
+    484					   call	DosWrite c,1,offset(sInfo0),sInfo1-sInfo0,offset(BytesDone)
+1   485	000002A7  68 000000BCr			 PUSH	 OFFSET(BYTESDONE)
+1   486	000002AC  6A 1A				 PUSH	 SINFO1-SINFO0
+1   487	000002AE  68 000001AAr			 PUSH	 OFFSET(SINFO0)
+1   488	000002B3  6A 01				 PUSH	 1
+1   489	000002B5  E8 00000000e			 CALL	 DOSWRITE
+1   490	000002BA  83 C4	10			 ADD	 ESP,00010h
+    491					   call	MciSendCommand c,[AmpOpenParms+04h],01,02002h,offset(AmpOpenParms),0
+1   492	000002BD  6A 00				 PUSH	 0
+1   493	000002BF  68 00000012r			 PUSH	 OFFSET(AMPOPENPARMS)
+1   494	000002C4  68 00002002			 PUSH	 02002H
+1   495	000002C9  6A 01				 PUSH	 01
+1   496	000002CB  FF 35	00000016r		 PUSH	 [AMPOPENPARMS+04H]
+1   497	000002D1  E8 00000000e			 CALL	 MCISENDCOMMAND
+1   498	000002D6  83 C4	14			 ADD	 ESP,00014h
+    499	000002D9  85 C0			   test	eax,eax	; any error
+    500	000002DB  0F 85	000000A0	   jnz MultimediaMessage
+    501					 ; inform ampmixer that	dart is	used and wait
+    502					 ; 63=MCI_MIXSETUP,10002h=MCI_MIXSETUP_INIT+MCI_WAIT
+    503					   call	DosWrite c,1,offset(sInfo1),sInfo2-sInfo1,offset(BytesDone)
+1   504	000002E1  68 000000BCr			 PUSH	 OFFSET(BYTESDONE)
+1   505	000002E6  6A 1C				 PUSH	 SINFO2-SINFO1
+1   506	000002E8  68 000001C4r			 PUSH	 OFFSET(SINFO1)
+1   507	000002ED  6A 01				 PUSH	 1
+1   508	000002EF  E8 00000000e			 CALL	 DOSWRITE
+1   509	000002F4  83 C4	10			 ADD	 ESP,00010h
+    510					   call	MciSendCommand c,[AmpOpenParms+04h],63,10002h,offset(MixerSetupParms),0
+1   511	000002F7  6A 00				 PUSH	 0
+1   512	000002F9  68 0000004Ar			 PUSH	 OFFSET(MIXERSETUPPARMS)
+1   513	000002FE  68 00010002			 PUSH	 10002H
+Turbo Assembler	 Version 4.1	    06-08-19 16:55:40	    Page 10
+replay.asm
+
+
+
+1   514	00000303  6A 3F				 PUSH	 63
+1   515	00000305  FF 35	00000016r		 PUSH	 [AMPOPENPARMS+04H]
+1   516	0000030B  E8 00000000e			 CALL	 MCISENDCOMMAND
+1   517	00000310  83 C4	14			 ADD	 ESP,00014h
+    518	00000313  85 C0			   test	eax,eax	; any error
+    519	00000315  75 6A			   jnz MultimediaMessage
+    520					 ; use recommended BufferSize
+    521	00000317  A1 0000007Ar		   mov eax,[MixerSetupParms+12*4]
+    522	0000031C  A3 00000036r		   mov [MixerAllocParms+3*4],eax
+    523					 ; use recommended NumBuffers
+    524					 ; mov eax,[MixerSetupParms+13*4]
+    525					 ; mov [MixerAllocParms+2*4],eax
+    526					 ; allocate dart communication buffers and wait
+    527					 ; 62=MCI_BUFFER,40002h=MCI_ALLOCATE_MEMORY+MCI_WAIT
+    528					   call	DosWrite c,1,offset(sInfo2),sInfo3-sInfo2,offset(BytesDone)
+1   529	00000321  68 000000BCr			 PUSH	 OFFSET(BYTESDONE)
+1   530	00000326  6A 1A				 PUSH	 SINFO3-SINFO2
+1   531	00000328  68 000001E0r			 PUSH	 OFFSET(SINFO2)
+1   532	0000032D  6A 01				 PUSH	 1
+1   533	0000032F  E8 00000000e			 CALL	 DOSWRITE
+1   534	00000334  83 C4	10			 ADD	 ESP,00010h
+    535					   call	MciSendCommand c,[AmpOpenParms+04h],62,40002h,offset(MixerAllocParms),0
+1   536	00000337  6A 00				 PUSH	 0
+1   537	00000339  68 0000002Ar			 PUSH	 OFFSET(MIXERALLOCPARMS)
+1   538	0000033E  68 00040002			 PUSH	 40002H
+1   539	00000343  6A 3E				 PUSH	 62
+1   540	00000345  FF 35	00000016r		 PUSH	 [AMPOPENPARMS+04H]
+1   541	0000034B  E8 00000000e			 CALL	 MCISENDCOMMAND
+1   542	00000350  83 C4	14			 ADD	 ESP,00014h
+    543	00000353  85 C0			   test	eax,eax	; any error
+    544	00000355  75 2A			   jnz MultimediaMessage
+    545					 ; create dart event semaphore
+    546					   call	DosWrite c,1,offset(sInfo3),sInfo4-sInfo3,offset(BytesDone)
+1   547	00000357  68 000000BCr			 PUSH	 OFFSET(BYTESDONE)
+1   548	0000035C  6A 1B				 PUSH	 SINFO4-SINFO3
+1   549	0000035E  68 000001FAr			 PUSH	 OFFSET(SINFO3)
+1   550	00000363  6A 01				 PUSH	 1
+1   551	00000365  E8 00000000e			 CALL	 DOSWRITE
+1   552	0000036A  83 C4	10			 ADD	 ESP,00010h
+    553					   call	DosCreateEventSem c,0,offset(DartSem),1,0
+1   554	0000036D  6A 00				 PUSH	 0
+1   555	0000036F  6A 01				 PUSH	 1
+1   556	00000371  68 00000000r			 PUSH	 OFFSET(DARTSEM)
+1   557	00000376  6A 00				 PUSH	 0
+1   558	00000378  E8 00000000e			 CALL	 DOSCREATEEVENTSEM
+1   559	0000037D  83 C4	10			 ADD	 ESP,00010h
+    560	00000380  C3			   ret ; return
+    561	00000381			 label MultimediaMessage near
+    562					 ; write multimedia error message
+    563	00000381  E8 FFFFFDF5		   call	ShowMultimediaMessage
+    564					 ; exit	the program
+    565					   call	DosExit	c,1,0
+1   566	00000386  6A 00				 PUSH	 0
+1   567	00000388  6A 01				 PUSH	 1
+1   568	0000038A  E8 00000000e			 CALL	 DOSEXIT
+1   569	0000038F  83 C4	08			 ADD	 ESP,00008h
+    570	00000392			 endp SoundDeviceInit
+Turbo Assembler	 Version 4.1	    06-08-19 16:55:40	    Page 11
+replay.asm
+
+
+
+    571
+    572	00000392			 codeseg
+    573	00000392			 proc SoundMixerEvent c	near
+    574					 arg @@Status,@@Buffer,@@Flags
+    575					 ; handle write	complete condition
+    576					 ; cmp [@@Flags],02h ; write complete
+    577					 ; jne EndSoundMixerEvent ; other
+    578					 ; report mixer	write completion
+1   579	00000392  C8 0000 00			 ENTERD	 00000h,0
+1   580					   call	DosPostEventSem	c,[DartSem]
+2   581	00000396  FF 35	00000000r		 PUSH	 [DARTSEM]
+2   582	0000039C  E8 00000000e			 CALL	 DOSPOSTEVENTSEM
+2   583	000003A1  83 C4	04			 ADD	 ESP,00004h
+    584	000003A4			 label EndSoundMixerEvent near
+1   585	000003A4  C9				 LEAVED
+1   586	000003A5  C3				 RET	 00000h
+    587	000003A6			 endp SoundMixerEvent
+    588
+    589	000003A6			 codeseg
+    590	000003A6			 proc SoundProcessing near
+    591					 ; read	riff/wave audio	file header
+    592					   call	DosWrite c,1,offset(sTest1),sTest2-sTest1,offset(BytesDone)
+1   593	000003A6  68 000000BCr			 PUSH	 OFFSET(BYTESDONE)
+1   594	000003AB  6A 1B				 PUSH	 STEST2-STEST1
+1   595	000003AD  68 0000029Br			 PUSH	 OFFSET(STEST1)
+1   596	000003B2  6A 01				 PUSH	 1
+1   597	000003B4  E8 00000000e			 CALL	 DOSWRITE
+1   598	000003B9  83 C4	10			 ADD	 ESP,00010h
+    599					   call	DosRead	c,[fhInput],offset(AudioHeader),44,offset(BytesDone)
+1   600	000003BC  68 000000BCr			 PUSH	 OFFSET(BYTESDONE)
+1   601	000003C1  6A 2C				 PUSH	 44
+1   602	000003C3  68 0000008Cr			 PUSH	 OFFSET(AUDIOHEADER)
+1   603	000003C8  FF 35	000000C8r		 PUSH	 [FHINPUT]
+1   604	000003CE  E8 00000000e			 CALL	 DOSREAD
+1   605	000003D3  83 C4	10			 ADD	 ESP,00010h
+    606	000003D6  E8 FFFFFDCB		   call	ShowReturnCode
+    607	000003DB  0F 85	0000009C	   jnz EndReplaySound
+    608	000003E1			 label MixerBufferProcess near
+    609					 ; call	DosWrite c,1,offset(sTest1),sTest2-sTest1,offset(BytesDone)
+    610					 ; address first sample	position
+    611	000003E1  A1 00000186r		   mov eax,[MixerBuffer] ; current
+    612	000003E6  8B 40	04		   mov eax,[eax+4] ; buffer pointer
+    613					 ; read	pcm audio input	data into buffer
+    614					   call	DosRead	c,[fhInput],eax,[MixerAllocParms+12],offset(BytesRead)
+1   615	000003E9  68 000000C0r			 PUSH	 OFFSET(BYTESREAD)
+1   616	000003EE  FF 35	00000036r		 PUSH	 [MIXERALLOCPARMS+12]
+1   617	000003F4  50				 PUSH	 EAX
+1   618	000003F5  FF 35	000000C8r		 PUSH	 [FHINPUT]
+1   619	000003FB  E8 00000000e			 CALL	 DOSREAD
+1   620	00000400  83 C4	10			 ADD	 ESP,00010h
+    621	00000403  E8 FFFFFD9E		   call	ShowReturnCode
+    622	00000408  75 73			   jnz EndReplaySound
+    623	0000040A  39 05	000000C0r	   cmp [BytesRead],eax
+    624	00000410  76 6B			   jna EndReplaySound ;	stop
+    625					 ; write this filled mixer buffer
+    626					 ; 32=pmixWrite(PMIXERPROC) entry point
+    627					   call	[MixerSetupParms+32] c,[MixerSetupParms+28],[MixerBuffer],1
+Turbo Assembler	 Version 4.1	    06-08-19 16:55:40	    Page 12
+replay.asm
+
+
+
+1   628	00000412  6A 01				 PUSH	 1
+1   629	00000414  FF 35	00000186r		 PUSH	 [MIXERBUFFER]
+1   630	0000041A  FF 35	00000066r		 PUSH	 [MIXERSETUPPARMS+28]
+1   631	00000420  FF 15	0000006Ar		 CALL	 [MIXERSETUPPARMS+32]
+1   632	00000426  83 C4	0C			 ADD	 ESP,0000Ch
+    633	00000429  FF 0D	00000082r	   dec [FreeBuffers] ; buffer used
+    634	0000042F			 label UpdateCurrentFreeBuffers	near
+    635					 ; update currently available mixer buffers
+    636					   call	DosResetEventSem c,[DartSem],offset(FreeCnt)
+1   637	0000042F  68 00000004r			 PUSH	 OFFSET(FREECNT)
+1   638	00000434  FF 35	00000000r		 PUSH	 [DARTSEM]
+1   639	0000043A  E8 00000000e			 CALL	 DOSRESETEVENTSEM
+1   640	0000043F  83 C4	08			 ADD	 ESP,00008h
+    641	00000442  A1 00000004r		   mov eax,[FreeCnt] ; buffers freed
+    642	00000447  01 05	00000082r	   add [FreeBuffers],eax ; current
+    643	0000044D  75 1C			   jnz FillMixerBuffer ; available
+    644					 ; show	application waiting message
+    645					 ; call	DosWrite c,1,offset(sGood2),sGood3-sGood2,offset(BytesDone)
+    646					 ; await 2 seconds mixer buffer	available
+    647					   call	DosWaitEventSem	c,[DartSem],2000
+1   648	0000044F  68 000007D0			 PUSH	 2000
+1   649	00000454  FF 35	00000000r		 PUSH	 [DARTSEM]
+1   650	0000045A  E8 00000000e			 CALL	 DOSWAITEVENTSEM
+1   651	0000045F  83 C4	08			 ADD	 ESP,00008h
+    652	00000462  E8 FFFFFD3F		   call	ShowReturnCode
+    653	00000467  75 14			   jnz EndReplaySound
+    654	00000469  EB C4			   jmp UpdateCurrentFreeBuffers
+    655	0000046B			 label FillMixerBuffer near
+    656					 ; address next	mixer buffer
+    657	0000046B  A1 00000186r		   mov eax,[MixerBuffer] ; last
+    658	00000470  8B 40	10		   mov eax,[eax+16] ; user parms
+    659	00000473  A3 00000186r		   mov [MixerBuffer],eax ; next
+    660	00000478  E9 FFFFFF64		   jmp MixerBufferProcess
+    661	0000047D			 label EndReplaySound near
+    662					 ; hang	in here	for 3 seconds
+    663					   call	DosSleep c,3000
+1   664	0000047D  68 00000BB8			 PUSH	 3000
+1   665	00000482  E8 00000000e			 CALL	 DOSSLEEP
+1   666	00000487  83 C4	04			 ADD	 ESP,00004h
+    667	0000048A  C3			   ret ; return
+    668	0000048B			 endp SoundProcessing
+    669
+    670					 end MainRoutine
+Turbo Assembler	 Version 4.1	    06-08-19 16:55:40	    Page 13
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "06-08-19"
+??FILENAME			  Text	 "replay  "
+??TIME				  Text	 "16:55:40"
+??VERSION			  Number 0401
+@32BIT				  Text	 1
+@@ARG				  Number [FLAT:EBP+0014]
+@@BUFFER			  Number [FLAT:EBP+000C]
+@@ENV				  Number [FLAT:EBP+0010]
+@@FLAGS				  Number [FLAT:EBP+0010]
+@@MOD				  Number [FLAT:EBP+0008]
+@@NUL				  Number [FLAT:EBP+000C]
+@@REASONCODE			  Number [FLAT:EBP+0008]
+@@STATUS			  Number [FLAT:EBP+0008]
+@CODE				  Text	 FLAT
+@CODESIZE			  Text	 0
+@CPU				  Text	 1F9FH
+@CURSEG				  Text	 _TEXT
+@DATA				  Text	 FLAT
+@DATASIZE			  Text	 0
+@FILENAME			  Text	 REPLAY
+@INTERFACE			  Text	 00H
+@MODEL				  Text	 1
+@STACK				  Text	 FLAT
+@WORDSIZE			  Text	 4
+ACTIONTAKEN			  Dword	 FLAT:00B8
+ADAPTER				  Number 0003
+AMPMIXER			  Byte	 FLAT:0009
+AMPOPENPARMS			  Dword	 FLAT:0012
+AUDIOHEADER			  Byte	 FLAT:008C
+BITSPERSAMPLE			  Number 0020
+BUFFERSIZE			  Number 0000
+BYTESDONE			  Dword	 FLAT:00BC
+BYTESREAD			  Dword	 FLAT:00C0
+CHANNELS			  Number 0002
+CLOSEAUDIORECORDFILE		  Near	 FLAT:0127
+CONVERTDIGIT			  Near	 FLAT:01B0
+CONVERTINPUT			  Near	 FLAT:00B3
+DARTSEM				  Dword	 FLAT:0000
+DEC2BIN				  Near	 FLAT:00AF
+DOSCLOSE			  Near	 ----:---- Extern
+DOSCLOSEEVENTSEM		  Near	 ----:---- Extern
+DOSCREATEEVENTSEM		  Near	 ----:---- Extern
+DOSEXIT				  Near	 ----:---- Extern
+DOSEXITLIST			  Near	 ----:---- Extern
+DOSOPEN				  Near	 ----:---- Extern
+DOSPOSTEVENTSEM			  Near	 ----:---- Extern
+DOSREAD				  Near	 ----:---- Extern
+DOSRESETEVENTSEM		  Near	 ----:---- Extern
+DOSSLEEP			  Near	 ----:---- Extern
+DOSWAITEVENTSEM			  Near	 ----:---- Extern
+DOSWRITE			  Near	 ----:---- Extern
+ENDDEC2BIN			  Near	 FLAT:00C8
+ENDREPLAYSOUND			  Near	 FLAT:047D
+ENDSCANSTRING			  Near	 FLAT:0126
+Turbo Assembler	 Version 4.1	    06-08-19 16:55:40	    Page 14
+Symbol Table
+
+
+
+ENDSHOWCODE			  Near	 FLAT:01DF
+ENDSHOWMULTIMEDIAMESSAGE	  Near	 FLAT:01A5
+ENDSOUNDMIXEREVENT		  Near	 FLAT:03A4
+FHDEVICE			  Dword	 FLAT:00C4
+FHINPUT				  Dword	 FLAT:00C8
+FILLMIXERBUFFER			  Near	 FLAT:046B
+FORMATTAG			  Number 0001
+FREEBUFFERS			  Dword	 FLAT:0082
+FREECNT				  Dword	 FLAT:0004
+HEX2ASCII			  Byte	 FLAT:02D1
+MAINROUTINE			  Near	 FLAT:0000
+MCIGETERRORSTRING		  Near	 ----:---- Extern
+MCIMESSAGE			  Byte	 FLAT:0008
+MCISENDCOMMAND			  Near	 ----:---- Extern
+MIXERALLOCPARMS			  Dword	 FLAT:002A
+MIXERBUFFER			  Dword	 FLAT:0186
+MIXERBUFFER1			  Dword	 FLAT:0086
+MIXERBUFFER2			  Dword	 FLAT:00A6
+MIXERBUFFER3			  Dword	 FLAT:00C6
+MIXERBUFFER4			  Dword	 FLAT:00E6
+MIXERBUFFER5			  Dword	 FLAT:0106
+MIXERBUFFER6			  Dword	 FLAT:0126
+MIXERBUFFER7			  Dword	 FLAT:0146
+MIXERBUFFER8			  Dword	 FLAT:0166
+MIXERBUFFERPROCESS		  Near	 FLAT:03E1
+MIXERSETUPPARMS			  Dword	 FLAT:004A
+MULTIMEDIAMESSAGE		  Near	 FLAT:0381
+NOTADAPTER			  Near	 FLAT:00EE
+NOTBITS				  Near	 FLAT:0100
+NOTCHANNELS			  Near	 FLAT:0112
+NOTFREQUENCY			  Near	 FLAT:0124
+NOTREPLAYSOUND			  Near	 FLAT:0088
+NUMBUFFERS			  Number 0008
+PROCESSARGUMENTS		  Near	 FLAT:00C9
+PROCESSCOMPLETE			  Near	 FLAT:0127
+SAMPLESPERSEC			  Number 0002EE00
+SGOOD0				  Byte	 FLAT:018A
+SGOOD1				  Byte	 FLAT:0194
+SGOOD2				  Byte	 FLAT:019E
+SGOOD3				  Byte	 FLAT:01AA
+SHOWMULTIMEDIAMESSAGE		  Near	 FLAT:017B
+SHOWRETURNCODE			  Near	 FLAT:01A6
+SINFO0				  Byte	 FLAT:01AA
+SINFO1				  Byte	 FLAT:01C4
+SINFO2				  Byte	 FLAT:01E0
+SINFO3				  Byte	 FLAT:01FA
+SINFO4				  Byte	 FLAT:0215
+SINFO5				  Byte	 FLAT:022F
+SINFO6				  Byte	 FLAT:024B
+SINFO7				  Byte	 FLAT:0266
+SINFO8				  Byte	 FLAT:0280
+SOUNDDEVICEEXIT			  Near	 FLAT:01E0
+SOUNDDEVICEINIT			  Near	 FLAT:02A7
+SOUNDMIXEREVENT			  Near	 FLAT:0392
+SOUNDPROCESSING			  Near	 FLAT:03A6
+STEST0				  Byte	 FLAT:0280
+STEST1				  Byte	 FLAT:029B
+Turbo Assembler	 Version 4.1	    06-08-19 16:55:40	    Page 15
+Symbol Table
+
+
+
+STEST2				  Byte	 FLAT:02B6
+STEST3				  Byte	 FLAT:02D1
+SZINPUT				  Byte	 FLAT:0000
+SZSTATUS			  Byte	 FLAT:02E1
+UPDATECURRENTFREEBUFFERS	  Near	 FLAT:042F
+WRITTEN				  Dword	 FLAT:0088
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+DGROUP				  Group
+  STACK				  32  2000 Para	  Stack	  STACK
+  _BSS				  32  00CC Dword  Public  BSS
+  _DATA				  32  02ED Dword  Public  DATA
+FLAT				  Group
+_TEXT				  32  048B Dword  Public  CODE
+
